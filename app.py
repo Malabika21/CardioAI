@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import sqlite3
 import bcrypt
 import os
+import urllib.request
 import pandas as pd
 import numpy as np
 import tensorflow as tf
@@ -26,10 +27,22 @@ from email_helper import send_ecg_report_to_doctor
 
 app = Flask(__name__)
 app.secret_key = 'cardioai_secret_key_2024'
+MODEL_DIR = "models"
+MODEL_PATH = os.path.join(MODEL_DIR, "cardiac_arrhythmia_cnn_gru_model.h5")
+MODEL_URL = "https://github.com/Malabika21/CardioAI/releases/download/v1.0.0/cardiac_arrhythmia_cnn_gru_model.h5"
 
+def ensure_model_exists():
+    if not os.path.exists(MODEL_DIR):
+        os.makedirs(MODEL_DIR)
+    if not os.path.exists(MODEL_PATH):
+        print(f"Downloading model from {MODEL_URL}...")
+        urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+        print("Model downloaded successfully!")
+
+ensure_model_exists()
 # Load trained model and scaler
 try:
-    model = tf.keras.models.load_model('models/cardiac_arrhythmia_cnn_gru_model.h5')
+    model = tf.keras.models.load_model(MODEL_PATH)
     with open('models/scaler.pkl', 'rb') as f:
         scaler = pickle.load(f)
     print("Model and scaler loaded successfully")
