@@ -9,7 +9,6 @@ temp_export/
 backups/
 
 # Models, dataset & media files
-models/
 dataset/
 *.mp4
 
