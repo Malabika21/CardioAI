@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}ECG Detection - CardioAI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">ECG Arrhythmia Detection</h1>
+            <p class="text-xl text-gray-600">Upload your ECG data for AI-powered cardiac analysis</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="{% if category == 'success' %}bg-green-50 border-green-200 text-green-700{% else %}bg-red-50 border-red-200 text-red-700{% endif %} border-2 rounded-xl p-4 mb-6">
+                        <p class="font-semibold flex items-center gap-2">
+                            <i class="bi {% if category == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}"></i>
+                            {{ message }}
+                        </p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8">
+            <div class="text-center mb-8">
+                <i class="bi bi-heart-pulse text-6xl text-blue-500 mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Upload ECG File</h2>
+                <p class="text-gray-600">Select a CSV file containing 187 ECG heartbeat features</p>
+            </div>
+
+            <form action="/upload_ecg" method="post" enctype="multipart/form-data" id="uploadForm" class="space-y-6">
+                
+                <div class="border-2 border-dashed border-blue-300 rounded-2xl p-12 text-center bg-blue-50 hover:bg-blue-100 transition-all" id="dropZone">
+                    <i class="bi bi-cloud-upload text-6xl text-blue-500 mb-4"></i>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Drag & Drop ECG File</h3>
+                    <p class="text-gray-600 mb-6">or click to browse files</p>
+                    
+                    <input 
+                        type="file" 
+                        name="ecg_file" 
+                        id="fileInput"
+                        accept=".csv"
+                        required
+                        class="hidden"
+                    >
+                    
+                    <button type="button" onclick="document.getElementById('fileInput').click()" 
+                            class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-8 py-3 rounded-xl font-bold hover:shadow-lg transition-all">
+                        Choose File
+                    </button>
+                    
+                    <div id="fileInfo" class="mt-4 hidden">
+                        <div class="flex items-center justify-center gap-2 text-green-600">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span id="fileName"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button 
+                        type="submit" 
+                        id="analyzeBtn"
+                        disabled
+                        class="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-12 py-4 rounded-xl font-bold text-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <i class="bi bi-cpu"></i> Analyze ECG Data
+                    </button>
+                </div>
+
+                <div id="uploadProgress" class="hidden">
+                    <div class="bg-gray-200 rounded-full h-3">
+                        <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-3 rounded-full transition-all duration-300" style="width: 0%" id="progressBar"></div>
+                    </div>
+                    <p class="text-center text-gray-600 mt-2">Processing ECG data...</p>
+                </div>
+
+            </form>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="bi bi-info-circle text-blue-500"></i>
+                    File Requirements
+                </h3>
+                <ul class="space-y-3 text-gray-600">
+                    <li class="flex items-start gap-2">
+                        <i class="bi bi-check text-green-500 mt-1"></i>
+                        CSV format with exactly 187 features
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="bi bi-check text-green-500 mt-1"></i>
+                        Single row of ECG heartbeat data
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="bi bi-check text-green-500 mt-1"></i>
+                        Numerical values only (no headers)
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="bi bi-check text-green-500 mt-1"></i>
+                        Maximum file size: 1MB
+                    </li>
+                </ul>
+                
+                <div class="mt-6">
+                    <a href="/download_sample" class="inline-flex items-center gap-2 text-blue-500 hover:text-blue-700 font-medium">
+                        <i class="bi bi-download"></i>
+                        Download Sample File
+                    </a>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="bi bi-graph-up text-green-500"></i>
+                    What You'll Get
+                </h3>
+                <ul class="space-y-3 text-gray-600">
+                    <li class="flex items-start gap-2">
+                        <i class="bi bi-bullseye text-blue-500 mt-1"></i>
+                        Arrhythmia classification result
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="bi bi-percent text-blue-500 mt-1"></i>
+                        Confidence score percentage
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="bi bi-bar-chart text-blue-500 mt-1"></i>
+                        ECG signal visualization
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="bi bi-file-earmark-pdf text-blue-500 mt-1"></i>
+                        Downloadable analysis report
+                    </li>
+                </ul>
+                
+                <div class="mt-6 p-4 bg-green-50 rounded-lg">
+                    <p class="text-sm text-green-700 font-medium">
+                        <i class="bi bi-shield-check"></i>
+                        98%+ accuracy with CNN-GRU AI model
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mt-8 bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-6">
+            <div class="flex items-start gap-3">
+                <i class="bi bi-exclamation-triangle text-yellow-600 text-xl mt-1"></i>
+                <div>
+                    <h4 class="font-bold text-yellow-800 mb-2">Medical Disclaimer</h4>
+                    <p class="text-yellow-700 text-sm">
+                        This AI analysis is for informational purposes only and should not replace professional medical advice. 
+                        Always consult with qualified healthcare providers for medical diagnosis and treatment decisions.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('progressBar');
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            fileName.textContent = file.name;
+            fileInfo.classList.remove('hidden');
+            analyzeBtn.disabled = false;
+        }
+    });
+
+    uploadForm.addEventListener('submit', function(e) {
+        analyzeBtn.disabled = true;
+        analyzeBtn.innerHTML = '<i class="bi bi-hourglass-split animate-spin"></i> Analyzing...';
+        uploadProgress.classList.remove('hidden');
+        
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 20;
+            if (progress > 90) progress = 90;
+            progressBar.style.width = progress + '%';
+        }, 500);
+        
+        setTimeout(() => {
+            clearInterval(interval);
+            progressBar.style.width = '100%';
+        }, 3000);
+    });
+
+    const dropZone = document.getElementById('dropZone');
+    
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        dropZone.classList.add('border-blue-500', 'bg-blue-100');
+    });
+    
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        dropZone.classList.remove('border-blue-500', 'bg-blue-100');
+    });
+    
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropZone.classList.remove('border-blue-500', 'bg-blue-100');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            const event = new Event('change', { bubbles: true });
+            fileInput.dispatchEvent(event);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Write Prescription - CardioAI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Write Prescription</h1>
+            <p class="text-xl text-gray-600">Create medical prescription for patient</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="{% if category == 'success' %}bg-green-50 border-green-200 text-green-700{% else %}bg-red-50 border-red-200 text-red-700{% endif %} border-2 rounded-xl p-4 mb-6">
+                        <p class="font-semibold flex items-center gap-2">
+                            <i class="bi {% if category == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}"></i>
+                            {{ message }}
+                        </p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <i class="bi bi-prescription2 text-blue-500"></i>
+                        Prescription Form
+                    </h2>
+
+                    <form action="/write_prescription" method="post" class="space-y-6">
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Patient</label>
+                                <select name="patient_id" required class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-blue-500 focus:outline-none">
+                                    <option value="">Select patient</option>
+                                    {% for patient in patients %}
+                                    <option value="{{ patient.id }}" {% if selected_patient and selected_patient.id == patient.id %}selected{% endif %}>
+                                        {{ patient.name }} - {{ patient.email }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Date</label>
+                                <input type="date" name="prescription_date" value="{{ current_date }}" required 
+                                       class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-blue-500 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">Medication Name</label>
+                            <input type="text" name="medication" required 
+                                   class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-blue-500 focus:outline-none"
+                                   placeholder="e.g., Metoprolol, Lisinopril, Atorvastatin">
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Dosage</label>
+                                <input type="text" name="dosage" required 
+                                       class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-blue-500 focus:outline-none"
+                                       placeholder="e.g., 50mg, 10mg">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Frequency</label>
+                                <select name="frequency" required class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-blue-500 focus:outline-none">
+                                    <option value="">Select frequency</option>
+                                    <option value="Once daily">Once daily</option>
+                                    <option value="Twice daily">Twice daily</option>
+                                    <option value="Three times daily">Three times daily</option>
+                                    <option value="Four times daily">Four times daily</option>
+                                    <option value="As needed">As needed</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Duration</label>
+                                <input type="text" name="duration" required 
+                                       class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-blue-500 focus:outline-none"
+                                       placeholder="e.g., 30 days, 1 month">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Quantity</label>
+                                <input type="text" name="quantity" 
+                                       class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-blue-500 focus:outline-none"
+                                       placeholder="e.g., 30 tablets">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">Instructions</label>
+                            <textarea name="instructions" rows="4" required
+                                      class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-blue-500 focus:outline-none"
+                                      placeholder="Detailed instructions for the patient...&#10;e.g., Take with food, avoid alcohol, monitor blood pressure"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">Diagnosis/Reason</label>
+                            <textarea name="diagnosis" rows="3"
+                                      class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-blue-500 focus:outline-none"
+                                      placeholder="Medical condition or reason for prescription..."></textarea>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="flex items-start">
+                                <input type="checkbox" name="refills_allowed" class="w-5 h-5 mt-0.5 text-blue-500 border-gray-300 rounded">
+                                <span class="ml-3 text-gray-700">Allow refills</span>
+                            </label>
+                            <label class="flex items-start">
+                                <input type="checkbox" name="urgent" class="w-5 h-5 mt-0.5 text-red-500 border-gray-300 rounded">
+                                <span class="ml-3 text-gray-700">Mark as urgent</span>
+                            </label>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <button type="submit" 
+                                    class="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg transition-all">
+                                <i class="bi bi-check-circle"></i> Write Prescription
+                            </button>
+                            <a href="/doctor_dashboard" 
+                               class="flex-1 bg-gray-500 text-white py-4 rounded-xl font-bold text-lg text-center hover:bg-gray-600 transition-all">
+                                Cancel
+                            </a>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                
+                {% if selected_patient %}
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Patient Information</h3>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-sm text-gray-500">Name</label>
+                            <p class="font-medium">{{ selected_patient.name }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-500">Age</label>
+                            <p class="font-medium">{{ selected_patient.age or 'Not specified' }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-500">Gender</label>
+                            <p class="font-medium">{{ selected_patient.gender or 'Not specified' }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-500">Medical History</label>
+                            <p class="text-sm text-gray-600">{{ selected_patient.medical_history or 'None provided' }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Recent ECG Results</h3>
+                    
+                    {% if recent_predictions %}
+                    <div class="space-y-3">
+                        {% for prediction in recent_predictions %}
+                        <div class="border border-gray-200 rounded-lg p-3">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="px-3 py-1 rounded-full text-sm font-medium 
+                                    {% if prediction.result == 'Normal' %}bg-green-100 text-green-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ prediction.result }}
+                                </span>
+                                <span class="text-sm text-gray-500">{{ prediction.created_at.strftime('%m/%d') }}</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Confidence: {{ "%.1f"|format(prediction.confidence) }}%</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-heart-pulse text-4xl text-gray-300 mb-2"></i>
+                        <p class="text-gray-500 text-sm">No recent ECG results</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Common Medications</h3>
+                    
+                    <div class="space-y-2">
+                        <button type="button" onclick="fillMedication('Metoprolol', '50mg', 'Twice daily')" 
+                                class="w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all">
+                            <div class="font-medium">Metoprolol</div>
+                            <div class="text-sm text-gray-600">Beta blocker for arrhythmia</div>
+                        </button>
+                        <button type="button" onclick="fillMedication('Lisinopril', '10mg', 'Once daily')" 
+                                class="w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all">
+                            <div class="font-medium">Lisinopril</div>
+                            <div class="text-sm text-gray-600">ACE inhibitor</div>
+                        </button>
+                        <button type="button" onclick="fillMedication('Atorvastatin', '20mg', 'Once daily')" 
+                                class="w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all">
+                            <div class="font-medium">Atorvastatin</div>
+                            <div class="text-sm text-gray-600">Cholesterol medication</div>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function fillMedication(medication, dosage, frequency) {
+        document.querySelector('input[name="medication"]').value = medication;
+        document.querySelector('input[name="dosage"]').value = dosage;
+        document.querySelector('select[name="frequency"]').value = frequency;
+    }
+</script>
+{% endblock %}

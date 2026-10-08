@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}User Details - CardioAI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4">
+        
+        <!-- Header -->
+        <div class="mb-6">
+            <a href="{{ url_for('admin_dashboard') }}" class="text-blue-600 hover:text-blue-800 mb-4 inline-block">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+            <h1 class="text-3xl font-bold text-gray-800">User Details</h1>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-6">
+            
+            <!-- User Information Card -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div class="text-center mb-6">
+                        <div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="bi bi-person text-4xl text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">{{ user.name }}</h2>
+                        <p class="text-gray-600">{{ user.email }}</p>
+                        <span class="inline-block mt-3 px-4 py-2 rounded-full text-sm font-medium
+                            {% if user.role == 'doctor' %}bg-blue-100 text-blue-800
+                            {% elif user.role == 'patient' %}bg-green-100 text-green-800
+                            {% else %}bg-purple-100 text-purple-800{% endif %}">
+                            {{ user.role.title() }}
+                        </span>
+                    </div>
+
+                    <div class="space-y-3 border-t pt-4">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">User ID:</span>
+                            <span class="font-medium">{{ user.id }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Joined:</span>
+                            <span class="font-medium">{{ user.created_at.strftime('%m/%d/%Y') }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Status:</span>
+                            <span class="font-medium {% if user.is_blocked %}text-red-600{% else %}text-green-600{% endif %}">
+                                {% if user.is_blocked %}Blocked{% else %}Active{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-6 space-y-3">
+                        <button onclick="toggleBlockUser({{ user.id }})" 
+                                class="w-full {% if user.is_blocked %}bg-green-500 hover:bg-green-600{% else %}bg-red-500 hover:bg-red-600{% endif %} text-white py-3 rounded-lg font-medium transition-all">
+                            <i class="bi {% if user.is_blocked %}bi-unlock{% else %}bi-lock{% endif %}"></i>
+                            {% if user.is_blocked %}Unblock User{% else %}Block User{% endif %}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Role-Specific Info -->
+                {% if user.role_info %}
+                <div class="bg-white rounded-2xl shadow-lg p-6 mt-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                        {% if user.role == 'patient' %}Patient Information{% elif user.role == 'doctor' %}Doctor Information{% endif %}
+                    </h3>
+                    
+                    {% if user.role == 'patient' %}
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Age:</span>
+                                <span class="font-medium">{{ user.role_info['age'] if user.role_info['age'] else 'N/A' }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Gender:</span>
+                                <span class="font-medium">{{ user.role_info['gender'].title() if user.role_info['gender'] else 'N/A' }}</span>
+                            </div>
+                            {% if user.role_info['medical_history'] %}
+                            <div class="pt-3 border-t">
+                                <span class="text-gray-600 block mb-2">Medical History:</span>
+                                <p class="text-sm text-gray-700 bg-gray-50 p-3 rounded">{{ user.role_info['medical_history'] }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% elif user.role == 'doctor' %}
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Specialization:</span>
+                                <span class="font-medium">{{ user.role_info['specialization'] }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">License ID:</span>
+                                <span class="font-medium">{{ user.role_info['license_id'] }}</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Activity Section -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                {% if user.role == 'patient' %}
+                    <!-- ECG Analyses -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">ECG Analyses ({{ user.predictions|length }})</h3>
+                        
+                        {% if user.predictions %}
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Result</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Confidence</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for prediction in user.predictions[:10] %}
+                                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                        <td class="py-3 px-4 text-gray-600">{{ prediction.created_at.strftime('%m/%d/%Y %H:%M') }}</td>
+                                        <td class="py-3 px-4">
+                                            <span class="px-3 py-1 rounded-full text-sm font-medium
+                                                {% if prediction.result == 'Normal' %}bg-green-100 text-green-800
+                                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                                {{ prediction.result }}
+                                            </span>
+                                        </td>
+                                        <td class="py-3 px-4 text-gray-600">{{ "%.1f"|format(prediction.confidence) }}%</td>
+                                        <td class="py-3 px-4">
+                                            <a href="{{ url_for('results', prediction_id=prediction.id) }}" 
+                                               class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                                View Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-gray-500 text-center py-8">No ECG analyses yet</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Prescriptions -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Prescriptions ({{ user.prescriptions|length }})</h3>
+                        
+                        {% if user.prescriptions %}
+                        <div class="space-y-3">
+                            {% for prescription in user.prescriptions[:5] %}
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800">{{ prescription.medication }}</h4>
+                                        <p class="text-sm text-gray-600">Prescribed by: {{ prescription.doctor_name }}</p>
+                                    </div>
+                                    <span class="text-xs text-gray-500">{{ prescription.created_at.strftime('%m/%d/%Y') }}</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    <p><strong>Dosage:</strong> {{ prescription.dosage }}</p>
+                                    <p><strong>Frequency:</strong> {{ prescription.frequency }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-gray-500 text-center py-8">No prescriptions yet</p>
+                        {% endif %}
+                    </div>
+
+                {% elif user.role == 'doctor' %}
+                    <!-- Doctor's Prescriptions -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Prescriptions Written ({{ user.prescriptions|length }})</h3>
+                        
+                        {% if user.prescriptions %}
+                        <div class="space-y-3">
+                            {% for prescription in user.prescriptions[:10] %}
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800">{{ prescription.medication }}</h4>
+                                        <p class="text-sm text-gray-600">Patient: {{ prescription.patient_name }}</p>
+                                    </div>
+                                    <span class="text-xs text-gray-500">{{ prescription.created_at.strftime('%m/%d/%Y') }}</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    <p><strong>Dosage:</strong> {{ prescription.dosage }}</p>
+                                    <p><strong>Duration:</strong> {{ prescription.duration }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-gray-500 text-center py-8">No prescriptions written yet</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleBlockUser(userId) {
+    const action = {{ 'true' if user.is_blocked else 'false' }};
+    const message = action ? 'Are you sure you want to unblock this user?' : 'Are you sure you want to block this user?';
+    
+    if (confirm(message)) {
+        fetch(`/block_user/${userId}`, { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error: ' + error);
+        });
+    }
+}
+</script>
+{% endblock %}

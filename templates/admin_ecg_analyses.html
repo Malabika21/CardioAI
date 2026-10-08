@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}ECG Analyses - Admin - CardioAI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4">
+        
+        <!-- Header -->
+        <div class="mb-8">
+            <a href="{{ url_for('admin_dashboard') }}" class="text-blue-600 hover:text-blue-800 mb-4 inline-block">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">ECG Analyses Overview</h1>
+            <p class="text-gray-600">View all ECG analyses performed in the system</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Total Analyses</p>
+                        <p class="text-3xl font-bold text-gray-800">{{ total }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="bi bi-heart-pulse text-2xl text-blue-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Normal Results</p>
+                        <p class="text-3xl font-bold text-green-600">{{ normal }}</p>
+                        <p class="text-xs text-gray-500">{{ "%.1f"|format((normal/total*100) if total > 0 else 0) }}%</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="bi bi-check-circle text-2xl text-green-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Abnormal Results</p>
+                        <p class="text-3xl font-bold text-red-600">{{ abnormal }}</p>
+                        <p class="text-xs text-gray-500">{{ "%.1f"|format((abnormal/total*100) if total > 0 else 0) }}%</p>
+                    </div>
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                        <i class="bi bi-exclamation-triangle text-2xl text-red-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analyses Table -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">All ECG Analyses</h2>
+                <div class="flex gap-3">
+                    <select id="filterResult" class="border border-gray-300 rounded-lg px-3 py-2" onchange="filterTable()">
+                        <option value="all">All Results</option>
+                        <option value="Normal">Normal</option>
+                        <option value="Abnormal">Abnormal</option>
+                    </select>
+                    <input type="text" id="searchPatient" placeholder="Search patient..." 
+                           class="border border-gray-300 rounded-lg px-3 py-2" onkeyup="searchTable()">
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full" id="analysesTable">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">ID</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Patient</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Result</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Confidence</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prediction in predictions %}
+                        <tr class="border-b border-gray-100 hover:bg-gray-50" 
+                            data-result="{{ prediction.result }}" 
+                            data-patient="{{ prediction.patient_name }}">
+                            <td class="py-4 px-4 text-gray-600">#{{ prediction.id }}</td>
+                            <td class="py-4 px-4">
+                                <div>
+                                    <div class="font-medium text-gray-800">{{ prediction.patient_name }}</div>
+                                    <div class="text-sm text-gray-500">{{ prediction.patient_email }}</div>
+                                </div>
+                            </td>
+                            <td class="py-4 px-4">
+                                <span class="px-3 py-1 rounded-full text-sm font-medium
+                                    {% if prediction.result == 'Normal' %}bg-green-100 text-green-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ prediction.result }}
+                                </span>
+                            </td>
+                            <td class="py-4 px-4">
+                                <div class="flex items-center">
+                                    <div class="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                        <div class="bg-blue-600 h-2 rounded-full" style="width: {{ prediction.confidence }}%"></div>
+                                    </div>
+                                    <span class="text-sm text-gray-600">{{ "%.1f"|format(prediction.confidence) }}%</span>
+                                </div>
+                            </td>
+                            <td class="py-4 px-4 text-gray-600">{{ prediction.created_at.strftime('%m/%d/%Y %H:%M') }}</td>
+                            <td class="py-4 px-4">
+                                <a href="{{ url_for('results', prediction_id=prediction.id) }}" 
+                                   class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if predictions|length == 0 %}
+            <div class="text-center py-12">
+                <i class="bi bi-inbox text-6xl text-gray-300"></i>
+                <p class="text-gray-500 mt-4">No ECG analyses found</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function filterTable() {
+    const filter = document.getElementById('filterResult').value;
+    const rows = document.querySelectorAll('#analysesTable tbody tr');
+    
+    rows.forEach(row => {
+        const result = row.getAttribute('data-result');
+        if (filter === 'all') {
+            row.style.display = '';
+        } else if (filter === 'Normal' && result === 'Normal') {
+            row.style.display = '';
+        } else if (filter === 'Abnormal' && result !== 'Normal') {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function searchTable() {
+    const search = document.getElementById('searchPatient').value.toLowerCase();
+    const rows = document.querySelectorAll('#analysesTable tbody tr');
+    
+    rows.forEach(row => {
+        const patient = row.getAttribute('data-patient').toLowerCase();
+        if (patient.includes(search)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

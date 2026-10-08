@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Login - CardioAI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center p-6">
+    <div class="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden grid md:grid-cols-2">
+        
+        <div class="p-12">
+            <div class="mb-8">
+                <a href="/" class="text-3xl font-bold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
+                    <i class="bi bi-heart-pulse"></i> CardioAI
+                </a>
+            </div>
+
+            <h2 class="text-4xl font-bold text-gray-800 mb-3">Welcome Back!</h2>
+            <p class="text-gray-600 mb-8">Log in to access cardiac arrhythmia detection</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="{% if category == 'success' %}bg-green-50 border-green-200 text-green-700{% else %}bg-red-50 border-red-200 text-red-700{% endif %} border-2 rounded-xl p-4 mb-6">
+                            <p class="font-semibold flex items-center gap-2">
+                                <i class="bi {% if category == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}"></i>
+                                {{ message }}
+                            </p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="/login" method="post" id="loginForm" class="space-y-6">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Email Address</label>
+                    <div class="relative">
+                        <i class="bi bi-envelope-fill absolute left-4 top-4 text-gray-400"></i>
+                        <input 
+                            type="email" 
+                            name="email" 
+                            id="email"
+                            required
+                            class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                            placeholder="Enter your email"
+                        >
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Password</label>
+                    <div class="relative">
+                        <i class="bi bi-lock-fill absolute left-4 top-4 text-gray-400"></i>
+                        <input 
+                            type="password" 
+                            name="password" 
+                            id="password"
+                            required
+                            class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                            placeholder="Enter your password"
+                        >
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Login As</label>
+                    <div class="relative">
+                        <i class="bi bi-person-badge-fill absolute left-4 top-4 text-gray-400"></i>
+                        <select 
+                            name="role" 
+                            id="role"
+                            required
+                            class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                        >
+                            <option value="">Select your role</option>
+                            <option value="patient">Patient</option>
+                            <option value="doctor">Doctor</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button 
+                    type="submit" 
+                    class="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-4 rounded-xl hover:shadow-lg transition-all"
+                >
+                    Log In
+                </button>
+            </form>
+
+            <div class="mt-8 text-center">
+                <p class="text-gray-600">
+                    Don't have an account? 
+                    <a href="/signup" class="text-blue-500 hover:text-blue-600 font-semibold">Sign Up</a>
+                </p>
+            </div>
+
+            <div class="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                <h6 class="text-blue-700 font-bold mb-2 flex items-center gap-2">
+                    <i class="bi bi-info-circle-fill"></i>
+                    About CardioAI
+                </h6>
+                <p class="text-blue-700 text-sm">
+                    AI-powered cardiac arrhythmia detection using CNN-GRU hybrid model. 
+                    Upload ECG data to get instant classification with 98%+ accuracy.
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-blue-500 to-cyan-500 p-12 flex flex-col justify-center items-center text-white relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10">
+                <div class="absolute top-10 left-10 w-32 h-32 bg-white rounded-full"></div>
+                <div class="absolute bottom-10 right-10 w-40 h-40 bg-white rounded-full"></div>
+                <div class="absolute top-1/2 left-1/3 w-24 h-24 bg-white rounded-full"></div>
+            </div>
+            
+            <div class="relative z-10 text-center">
+                <i class="bi bi-heart-pulse-fill text-8xl mb-6"></i>
+                <h3 class="text-4xl font-bold mb-4">Cardiac Detection</h3>
+                <p class="text-lg opacity-90 mb-8">AI-powered arrhythmia classification</p>
+                
+                <div class="space-y-4 text-left">
+                    <div class="flex items-start gap-3">
+                        <i class="bi bi-check-circle-fill text-2xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold">98%+ Accuracy</h4>
+                            <p class="text-sm opacity-80">CNN-GRU hybrid model precision</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="bi bi-check-circle-fill text-2xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold">Instant Results</h4>
+                            <p class="text-sm opacity-80">Real-time ECG classification</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="bi bi-check-circle-fill text-2xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold">5 Arrhythmia Types</h4>
+                            <p class="text-sm opacity-80">Normal, PVC, Atrial, Fusion, Unknown</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span>Logging in...';
+    });
+</script>
+{% endblock %}

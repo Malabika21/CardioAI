@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Dashboard - CardioAI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4">
+        
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Doctor Dashboard</h1>
+            <p class="text-gray-600">Welcome Dr. {{ session.name }} - Review patient ECG analyses and manage prescriptions</p>
+        </div>
+
+        <div class="grid lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                <i class="bi bi-people text-4xl text-blue-500 mb-3"></i>
+                <div class="text-2xl font-bold text-gray-800">{{ total_patients }}</div>
+                <div class="text-gray-600">Total Patients</div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                <i class="bi bi-heart-pulse text-4xl text-green-500 mb-3"></i>
+                <div class="text-2xl font-bold text-gray-800">{{ total_predictions }}</div>
+                <div class="text-gray-600">ECG Analyses</div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                <i class="bi bi-clipboard-check text-4xl text-orange-500 mb-3"></i>
+                <div class="text-2xl font-bold text-gray-800">{{ pending_reviews }}</div>
+                <div class="text-gray-600">Pending Reviews</div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                <i class="bi bi-prescription2 text-4xl text-purple-500 mb-3"></i>
+                <div class="text-2xl font-bold text-gray-800">{{ total_prescriptions }}</div>
+                <div class="text-gray-600">Prescriptions</div>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-2 space-y-6">
+                
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Recent ECG Analyses</h2>
+                        <div class="flex gap-3">
+                            <select class="border border-gray-300 rounded-lg px-3 py-2">
+                                <option value="all">All Results</option>
+                                <option value="abnormal">Abnormal Only</option>
+                                <option value="normal">Normal Only</option>
+                            </select>
+                            <input type="text" placeholder="Search patient..." class="border border-gray-300 rounded-lg px-3 py-2">
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Patient</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Result</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Confidence</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prediction in recent_predictions %}
+                                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                <i class="bi bi-person text-blue-600"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-medium text-gray-800">{{ prediction.patient_name }}</div>
+                                                <div class="text-sm text-gray-500">{{ prediction.patient_email }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 text-gray-600">{{ prediction.created_at.strftime('%m/%d/%Y') }}</td>
+                                    <td class="py-4 px-4">
+                                        <span class="px-3 py-1 rounded-full text-sm font-medium 
+                                            {% if prediction.result == 'Normal' %}bg-green-100 text-green-800
+                                            {% else %}bg-red-100 text-red-800{% endif %}">
+                                            {{ prediction.result }}
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-4 text-gray-600">{{ "%.1f"|format(prediction.confidence) }}%</td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex gap-2">
+                                            <a href="/results/{{ prediction.id }}" 
+                                               class="text-blue-500 hover:text-blue-700 text-sm font-medium">
+                                                View
+                                            </a>
+                                            <a href="/prescription/{{ prediction.patient_id }}" 
+                                               class="text-green-500 hover:text-green-700 text-sm font-medium">
+                                                Prescribe
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">All Patients</h2>
+                    
+                    <div class="space-y-4">
+                        {% for patient in patients %}
+                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <i class="bi bi-person text-blue-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-800">{{ patient.name }}</h3>
+                                        <p class="text-sm text-gray-500">{{ patient.email }}</p>
+                                        <p class="text-sm text-gray-500">Age: {{ patient.age or 'N/A' }}, Gender: {{ patient.gender or 'N/A' }}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm text-gray-500">{{ patient.prediction_count }} analyses</span>
+                                    <a href="/patient_details/{{ patient.id }}" 
+                                       class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="space-y-6">
+                
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Quick Prescription</h3>
+                    
+                    <form action="/write_prescription" method="post" class="space-y-4">
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">Patient</label>
+                            <select name="patient_id" required class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                <option value="">Select patient</option>
+                                {% for patient in patients %}
+                                <option value="{{ patient.id }}">{{ patient.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">Medication</label>
+                            <input type="text" name="medication" required 
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                   placeholder="e.g., Metoprolol">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">Dosage</label>
+                            <input type="text" name="dosage" required 
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                   placeholder="e.g., 50mg twice daily">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">Instructions</label>
+                            <textarea name="instructions" rows="3" 
+                                      class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                      placeholder="Additional instructions..."></textarea>
+                        </div>
+                        
+                        <button type="submit" 
+                                class="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 rounded-lg font-bold hover:shadow-lg transition-all">
+                            Write Prescription
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Abnormal Cases Alert</h3>
+                    
+                    {% if abnormal_cases %}
+                    <div class="space-y-3">
+                        {% for case in abnormal_cases %}
+                        <div class="border-l-4 border-red-500 bg-red-50 p-3 rounded-r-lg">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-medium text-red-800">{{ case.patient_name }}</h4>
+                                    <p class="text-sm text-red-600">{{ case.result }} - {{ "%.1f"|format(case.confidence) }}%</p>
+                                </div>
+                                <a href="/results/{{ case.id }}" class="text-red-600 hover:text-red-800">
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-check-circle text-4xl text-green-500 mb-2"></i>
+                        <p class="text-gray-500">No urgent cases</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Recent Prescriptions</h3>
+                    
+                    {% if recent_prescriptions %}
+                    <div class="space-y-3">
+                        {% for prescription in recent_prescriptions %}
+                        <div class="border border-gray-200 rounded-lg p-3">
+                            <div class="font-medium text-gray-800">{{ prescription.patient_name }}</div>
+                            <div class="text-sm text-gray-600">{{ prescription.medication }}</div>
+                            <div class="text-xs text-gray-500">{{ prescription.created_at.strftime('%m/%d/%Y') }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-prescription2 text-4xl text-gray-300 mb-2"></i>
+                        <p class="text-gray-500">No recent prescriptions</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

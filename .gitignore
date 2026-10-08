@@ -1,0 +1,20 @@
+# Byte-code & cache files
+__pycache__/
+*.py[cod]
+
+# Local database & temp exports
+*.db
+*.sqlite3
+temp_export/
+backups/
+
+# Models, dataset & media files
+models/
+dataset/
+*.mp4
+
+# Virtual environments & secrets
+.env
+venv/
+.venv/
+static/uploads/

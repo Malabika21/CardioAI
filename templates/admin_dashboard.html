@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - CardioAI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4">
+        
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Admin Dashboard</h1>
+            <p class="text-gray-600">System administration and user management for CardioAI</p>
+        </div>
+
+        <div class="grid lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                <i class="bi bi-people text-4xl text-blue-500 mb-3"></i>
+                <div class="text-2xl font-bold text-gray-800">{{ total_users }}</div>
+                <div class="text-gray-600">Total Users</div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                <i class="bi bi-person-badge text-4xl text-green-500 mb-3"></i>
+                <div class="text-2xl font-bold text-gray-800">{{ total_doctors }}</div>
+                <div class="text-gray-600">Doctors</div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                <i class="bi bi-person-heart text-4xl text-purple-500 mb-3"></i>
+                <div class="text-2xl font-bold text-gray-800">{{ total_patients }}</div>
+                <div class="text-gray-600">Patients</div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                <i class="bi bi-heart-pulse text-4xl text-red-500 mb-3"></i>
+                <div class="text-2xl font-bold text-gray-800">{{ total_predictions }}</div>
+                <div class="text-gray-600">ECG Analyses</div>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-2 space-y-6">
+                
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">User Management</h2>
+                        <div class="flex gap-3">
+                            <select id="roleFilter" class="border border-gray-300 rounded-lg px-3 py-2">
+                                <option value="all">All Users</option>
+                                <option value="patient">Patients</option>
+                                <option value="doctor">Doctors</option>
+                            </select>
+                            <input type="text" id="userSearch" placeholder="Search users..." 
+                                   class="border border-gray-300 rounded-lg px-3 py-2">
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">User</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Role</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Joined</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                                                <i class="bi bi-person text-gray-600"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-medium text-gray-800">{{ user.name }}</div>
+                                                <div class="text-sm text-gray-500">{{ user.email }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <span class="px-3 py-1 rounded-full text-sm font-medium 
+                                            {% if user.role == 'doctor' %}bg-blue-100 text-blue-800
+                                            {% elif user.role == 'patient' %}bg-green-100 text-green-800
+                                            {% else %}bg-purple-100 text-purple-800{% endif %}">
+                                            {{ user.role.title() }}
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-4 text-gray-600">{{ user.created_at.strftime('%m/%d/%Y') }}</td>
+                                    <td class="py-4 px-4">
+                                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                            Active
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex gap-2">
+                                            <button onclick="viewUser({{ user.id }})" 
+                                                    class="text-blue-500 hover:text-blue-700 text-sm font-medium">
+                                                View
+                                            </button>
+                                            <button onclick="blockUser({{ user.id }})" 
+                                                    class="text-red-500 hover:text-red-700 text-sm font-medium">
+                                                Block
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">System Activity</h2>
+                    
+                    <div class="space-y-4">
+                        {% for activity in recent_activities %}
+                        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="bi 
+                                    {% if activity.type == 'registration' %}bi-person-plus
+                                    {% elif activity.type == 'prediction' %}bi-heart-pulse
+                                    {% elif activity.type == 'prescription' %}bi-prescription2
+                                    {% else %}bi-activity{% endif %} text-blue-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-800">{{ activity.description }}</div>
+                                <div class="text-sm text-gray-500">{{ activity.timestamp.strftime('%m/%d/%Y %H:%M') }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="space-y-6">
+                
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">System Statistics</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                            <span class="text-gray-700">Daily Analyses</span>
+                            <span class="font-bold text-blue-600">{{ daily_analyses }}</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                            <span class="text-gray-700">Normal Results</span>
+                            <span class="font-bold text-green-600">{{ normal_results }}%</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                            <span class="text-gray-700">Abnormal Results</span>
+                            <span class="font-bold text-red-600">{{ abnormal_results }}%</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                            <span class="text-gray-700">Avg Confidence</span>
+                            <span class="font-bold text-purple-600">{{ avg_confidence }}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Quick Actions</h3>
+                    
+                    <div class="space-y-3">
+                        <button onclick="exportData()" 
+                                class="w-full bg-blue-500 text-white py-3 rounded-lg font-medium hover:bg-blue-600 transition-all">
+                            <i class="bi bi-download"></i> Export Data
+                        </button>
+                        <button onclick="systemBackup()" 
+                                class="w-full bg-green-500 text-white py-3 rounded-lg font-medium hover:bg-green-600 transition-all">
+                            <i class="bi bi-shield-check"></i> System Backup
+                        </button>
+                        <button onclick="generateReport()" 
+                                class="w-full bg-purple-500 text-white py-3 rounded-lg font-medium hover:bg-purple-600 transition-all">
+                            <i class="bi bi-file-earmark-text"></i> Generate Report
+                        </button>
+                        <button onclick="clearLogs()" 
+                                class="w-full bg-red-500 text-white py-3 rounded-lg font-medium hover:bg-red-600 transition-all">
+                            <i class="bi bi-trash"></i> Clear Logs
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">System Health</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-700">Server Status</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <span class="text-green-600 font-medium">Online</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-700">Database</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <span class="text-green-600 font-medium">Connected</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-700">AI Model</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <span class="text-green-600 font-medium">Ready</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-700">Storage</span>
+                            <span class="text-gray-600">78% Used</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Alerts</h3>
+                    
+                    <div class="space-y-3">
+                        <div class="border-l-4 border-yellow-500 bg-yellow-50 p-3 rounded-r-lg">
+                            <div class="text-yellow-800 font-medium">System Maintenance</div>
+                            <div class="text-yellow-700 text-sm">Scheduled for next Sunday</div>
+                        </div>
+                        <div class="border-l-4 border-blue-500 bg-blue-50 p-3 rounded-r-lg">
+                            <div class="text-blue-800 font-medium">New Doctor Registration</div>
+                            <div class="text-blue-700 text-sm">3 pending approvals</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function viewUser(userId) {
+        window.location.href = '/user_details/' + userId;
+    }
+    
+    function blockUser(userId) {
+        if (confirm('Are you sure you want to block this user?')) {
+            fetch('/block_user/' + userId, { method: 'POST' })
+                .then(() => location.reload());
+        }
+    }
+    
+    function exportData() {
+        window.location.href = '/export_data';
+    }
+    
+    function systemBackup() {
+        alert('System backup initiated. You will be notified when complete.');
+    }
+    
+    function generateReport() {
+        window.location.href = '/generate_system_report';
+    }
+    
+    function clearLogs() {
+        if (confirm('Are you sure you want to clear system logs?')) {
+            fetch('/clear_logs', { method: 'POST' })
+                .then(() => alert('Logs cleared successfully'));
+        }
+    }
+</script>
+{% endblock %}

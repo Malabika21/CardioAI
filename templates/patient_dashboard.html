@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Dashboard - CardioAI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4">
+        
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome, {{ session.name }}</h1>
+            <p class="text-gray-600">Monitor your cardiac health with AI-powered analysis</p>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-2 space-y-6">
+                
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Upload New ECG</h2>
+                        <i class="bi bi-upload text-3xl text-blue-500"></i>
+                    </div>
+                    
+                    <div class="border-2 border-dashed border-blue-300 rounded-xl p-8 text-center bg-blue-50">
+                        <i class="bi bi-file-earmark-medical text-6xl text-blue-500 mb-4"></i>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Upload ECG Data</h3>
+                        <p class="text-gray-600 mb-6">Select your CSV file with 187 ECG features</p>
+                        
+                        <form action="/upload_ecg" method="post" enctype="multipart/form-data" class="space-y-4">
+                            <input 
+                                type="file" 
+                                name="ecg_file" 
+                                accept=".csv"
+                                required
+                                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600"
+                            >
+                            <button 
+                                type="submit"
+                                class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-8 py-3 rounded-xl font-bold hover:shadow-lg transition-all"
+                            >
+                                Analyze ECG
+                            </button>
+                        </form>
+                        
+                        <div class="mt-4 text-sm text-gray-500">
+                            <p>File must be CSV format with exactly 187 features</p>
+                            <a href="/download_sample" class="text-blue-500 hover:underline">Download sample file</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">ECG Analysis History</h2>
+                        <i class="bi bi-clock-history text-3xl text-gray-400"></i>
+                    </div>
+                    
+                    {% if predictions %}
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Result</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Confidence</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prediction in predictions %}
+                                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                    <td class="py-4 px-4 text-gray-600">{{ prediction.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td class="py-4 px-4">
+                                        <span class="px-3 py-1 rounded-full text-sm font-medium 
+                                            {% if prediction.result == 'Normal' %}bg-green-100 text-green-800
+                                            {% else %}bg-red-100 text-red-800{% endif %}">
+                                            {{ prediction.result }}
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-4 text-gray-600">{{ "%.1f"|format(prediction.confidence) }}%</td>
+                                    <td class="py-4 px-4">
+                                        <a href="/results/{{ prediction.id }}" 
+                                           class="text-blue-500 hover:text-blue-700 font-medium">
+                                            View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8">
+                        <i class="bi bi-inbox text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">No ECG analyses yet. Upload your first ECG file to get started.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <div class="space-y-6">
+                
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Quick Stats</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Total Analyses</span>
+                            <span class="font-bold text-2xl text-blue-500">{{ predictions|length }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Normal Results</span>
+                            <span class="font-bold text-2xl text-green-500">
+                                {{ predictions|selectattr('result', 'equalto', 'Normal')|list|length }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Abnormal Results</span>
+                            <span class="font-bold text-2xl text-red-500">
+                                {{ predictions|rejectattr('result', 'equalto', 'Normal')|list|length }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">My Prescriptions</h3>
+                    {% if prescriptions %}
+                    <div class="space-y-3">
+                        {% for prescription in prescriptions %}
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-gray-800">{{ prescription.medication }}</h4>
+                                <span class="text-sm text-gray-500">{{ prescription.created_at.strftime('%m/%d') }}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-1">{{ prescription.dosage }}</p>
+                            <p class="text-sm text-gray-500 mb-2">Dr. {{ prescription.doctor_name }}</p>
+                            <a href="/prescription_details/{{ prescription.id }}" 
+                               class="text-blue-500 hover:text-blue-700 text-sm font-medium">
+                                View Details →
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-prescription2 text-4xl text-gray-300 mb-2"></i>
+                        <p class="text-gray-500 text-sm">No prescriptions yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Profile Information</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-sm text-gray-500">Age</label>
+                            <p class="font-medium">{{ patient_info.age or 'Not specified' }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-500">Gender</label>
+                            <p class="font-medium">{{ patient_info.gender or 'Not specified' }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-500">Medical History</label>
+                            <p class="text-sm text-gray-600">{{ patient_info.medical_history or 'None provided' }}</p>
+                        </div>
+                    </div>
+                    <a href="/profile" class="block mt-4 text-center bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-all">
+                        Edit Profile
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

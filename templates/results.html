@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}ECG Analysis Results - CardioAI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-6xl mx-auto px-4">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">ECG Analysis Results</h1>
+            <p class="text-xl text-gray-600">AI-powered cardiac arrhythmia detection complete</p>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-8 mb-8">
+            
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+                <div class="text-center mb-6">
+                    <div class="w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4
+                        {% if prediction.result == 'Normal' %}bg-green-100{% else %}bg-red-100{% endif %}">
+                        <i class="bi {% if prediction.result == 'Normal' %}bi-check-circle text-green-500{% else %}bi-exclamation-triangle text-red-500{% endif %} text-3xl"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">{{ prediction.result }}</h2>
+                    <p class="text-gray-600">Arrhythmia Classification</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center p-4 bg-blue-50 rounded-xl">
+                        <span class="font-semibold text-gray-700">Confidence Score</span>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-blue-600">{{ "%.1f"|format(prediction.confidence) }}%</div>
+                            <div class="w-32 bg-gray-200 rounded-full h-2 mt-1">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: {{ prediction.confidence }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+                        <span class="font-semibold text-gray-700">Analysis Date</span>
+                        <span class="text-gray-600">{{ prediction.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+                        <span class="font-semibold text-gray-700">File Name</span>
+                        <span class="text-gray-600">{{ prediction.filename }}</span>
+                    </div>
+                </div>
+
+                <div class="mt-6 space-y-3">
+                    <a href="/download_report/{{ prediction.id }}" class="block w-full text-center bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-3 rounded-xl font-bold hover:shadow-lg transition-all">
+                        <i class="bi bi-download"></i> Download Report
+                    </a>
+                    <a href="/share_with_doctor/{{ prediction.id }}" class="block w-full text-center bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 transition-all">
+                        <i class="bi bi-share"></i> Share with Doctor
+                    </a>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <i class="bi bi-bar-chart text-blue-500"></i>
+                    Classification Breakdown
+                </h3>
+                
+                <div class="space-y-4">
+                    {% set probabilities = prediction.all_probabilities.split(',') %}
+                    {% set class_names = ['Normal', 'Supraventricular', 'Ventricular', 'Fusion', 'Unknown'] %}
+                    {% for i in range(5) %}
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-700 font-medium">{{ class_names[i] }}</span>
+                        <div class="flex items-center gap-3">
+                            <div class="w-32 bg-gray-200 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-blue-400 to-cyan-400 h-2 rounded-full" 
+                                     style="width: {{ probabilities[i]|float }}%"></div>
+                            </div>
+                            <span class="text-sm font-bold text-gray-600 w-12">{{ "%.1f"|format(probabilities[i]|float) }}%</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <i class="bi bi-graph-up text-green-500"></i>
+                ECG Signal Visualization
+            </h3>
+            
+            <div class="text-center">
+                {% if ecg_plot_path %}
+                <img src="{{ ecg_plot_path }}" alt="ECG Signal" class="max-w-full h-auto mx-auto rounded-lg border">
+                {% else %}
+                <div class="bg-gray-100 p-8 rounded-lg">
+                    <i class="bi bi-image text-6xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-500">ECG visualization will appear here</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="bi bi-info-circle text-blue-500"></i>
+                    About {{ prediction.result }}
+                </h3>
+                
+                {% if prediction.result == 'Normal' %}
+                <div class="text-gray-600 space-y-2">
+                    <p>Your ECG shows normal sinus rhythm with no detected arrhythmias.</p>
+                    <p class="text-green-600 font-medium">This is a healthy cardiac rhythm pattern.</p>
+                </div>
+                {% elif prediction.result == 'Supraventricular' %}
+                <div class="text-gray-600 space-y-2">
+                    <p>Supraventricular arrhythmia detected. This originates above the ventricles.</p>
+                    <p class="text-orange-600 font-medium">Consult with a cardiologist for evaluation.</p>
+                </div>
+                {% elif prediction.result == 'Ventricular' %}
+                <div class="text-gray-600 space-y-2">
+                    <p>Ventricular arrhythmia detected. This originates in the ventricles.</p>
+                    <p class="text-red-600 font-medium">Seek immediate medical attention.</p>
+                </div>
+                {% elif prediction.result == 'Fusion' %}
+                <div class="text-gray-600 space-y-2">
+                    <p>Fusion beat detected. This is a combination of normal and abnormal beats.</p>
+                    <p class="text-orange-600 font-medium">Further cardiac evaluation recommended.</p>
+                </div>
+                {% else %}
+                <div class="text-gray-600 space-y-2">
+                    <p>Unknown rhythm pattern detected that requires further analysis.</p>
+                    <p class="text-orange-600 font-medium">Professional medical evaluation needed.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="bi bi-heart-pulse text-red-500"></i>
+                    Next Steps
+                </h3>
+                
+                <ul class="space-y-3 text-gray-600">
+                    <li class="flex items-start gap-2">
+                        <i class="bi bi-1-circle text-blue-500 mt-1"></i>
+                        Save this report for your medical records
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="bi bi-2-circle text-blue-500 mt-1"></i>
+                        Share results with your healthcare provider
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="bi bi-3-circle text-blue-500 mt-1"></i>
+                        Follow up with appropriate medical care
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="bi bi-4-circle text-blue-500 mt-1"></i>
+                        Continue regular cardiac monitoring
+                    </li>
+                </ul>
+                
+                <div class="mt-6">
+                    <a href="/patient_dashboard" class="block text-center bg-gray-100 text-gray-700 py-3 rounded-xl hover:bg-gray-200 transition-all">
+                        Return to Dashboard
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mt-8 bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-6">
+            <div class="flex items-start gap-3">
+                <i class="bi bi-exclamation-triangle text-yellow-600 text-xl mt-1"></i>
+                <div>
+                    <h4 class="font-bold text-yellow-800 mb-2">Important Medical Disclaimer</h4>
+                    <p class="text-yellow-700 text-sm">
+                        This AI analysis is for informational purposes only and should not replace professional medical advice. 
+                        Always consult with qualified healthcare providers for medical diagnosis and treatment decisions. 
+                        In case of emergency symptoms, seek immediate medical attention.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

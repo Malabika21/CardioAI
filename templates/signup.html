@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - CardioAI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center p-6">
+    <div class="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden grid md:grid-cols-2">
+        
+        <div class="bg-gradient-to-br from-blue-500 to-cyan-500 p-12 flex flex-col justify-center items-center text-white relative overflow-hidden order-2 md:order-1">
+            <div class="absolute inset-0 opacity-10">
+                <div class="absolute top-10 left-10 w-32 h-32 bg-white rounded-full"></div>
+                <div class="absolute bottom-10 right-10 w-40 h-40 bg-white rounded-full"></div>
+                <div class="absolute top-1/2 left-1/3 w-24 h-24 bg-white rounded-full"></div>
+            </div>
+            
+            <div class="relative z-10 text-center">
+                <i class="bi bi-heart-pulse-fill text-8xl mb-6"></i>
+                <h3 class="text-4xl font-bold mb-4">Join CardioAI</h3>
+                <p class="text-lg opacity-90 mb-8">Create account for cardiac health monitoring</p>
+                
+                <div class="space-y-4 text-left">
+                    <div class="flex items-start gap-3">
+                        <i class="bi bi-check-circle-fill text-2xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold">Medical Grade AI</h4>
+                            <p class="text-sm opacity-80">Advanced arrhythmia detection</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="bi bi-check-circle-fill text-2xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold">Secure Platform</h4>
+                            <p class="text-sm opacity-80">HIPAA compliant data protection</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="bi bi-check-circle-fill text-2xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold">Expert Analysis</h4>
+                            <p class="text-sm opacity-80">Doctor review and prescriptions</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-12 order-1 md:order-2 max-h-screen overflow-y-auto">
+            <div class="mb-8">
+                <a href="/" class="text-3xl font-bold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
+                    <i class="bi bi-heart-pulse"></i> CardioAI
+                </a>
+            </div>
+
+            <h2 class="text-4xl font-bold text-gray-800 mb-3">Create Account</h2>
+            <p class="text-gray-600 mb-8">Sign up to start cardiac monitoring</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="{% if category == 'success' %}bg-green-50 border-green-200 text-green-700{% else %}bg-red-50 border-red-200 text-red-700{% endif %} border-2 rounded-xl p-4 mb-6">
+                            <p class="font-semibold flex items-center gap-2">
+                                <i class="bi {% if category == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}"></i>
+                                {{ message }}
+                            </p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="/signup" method="post" id="signupForm" class="space-y-5">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Full Name</label>
+                    <div class="relative">
+                        <i class="bi bi-person-fill absolute left-4 top-4 text-gray-400"></i>
+                        <input 
+                            type="text" 
+                            name="name" 
+                            id="name"
+                            required
+                            class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                            placeholder="Enter your full name"
+                        >
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Email Address</label>
+                    <div class="relative">
+                        <i class="bi bi-envelope-fill absolute left-4 top-4 text-gray-400"></i>
+                        <input 
+                            type="email" 
+                            name="email" 
+                            id="email"
+                            required
+                            class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                            placeholder="Enter your email"
+                        >
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Register As</label>
+                    <div class="relative">
+                        <i class="bi bi-person-badge-fill absolute left-4 top-4 text-gray-400"></i>
+                        <select 
+                            name="role" 
+                            id="role"
+                            required
+                            class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                            onchange="toggleRoleFields()"
+                        >
+                            <option value="">Select your role</option>
+                            <option value="patient">Patient</option>
+                            <option value="doctor">Doctor</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="patientFields" style="display: none;">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">Age</label>
+                            <input 
+                                type="number" 
+                                name="age" 
+                                min="1" 
+                                max="120"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                                placeholder="Age"
+                            >
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">Gender</label>
+                            <select 
+                                name="gender"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                            >
+                                <option value="">Select</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label class="block text-gray-700 font-semibold mb-2">Medical History</label>
+                        <textarea 
+                            name="medical_history"
+                            rows="3"
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                            placeholder="Brief medical history (optional)"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div id="doctorFields" style="display: none;">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">Specialization</label>
+                            <input 
+                                type="text" 
+                                name="specialization"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                                placeholder="e.g., Cardiology"
+                            >
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">License ID</label>
+                            <input 
+                                type="text" 
+                                name="license_id"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                                placeholder="Medical license number"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">Password</label>
+                        <div class="relative">
+                            <i class="bi bi-lock-fill absolute left-4 top-4 text-gray-400"></i>
+                            <input 
+                                type="password" 
+                                name="password" 
+                                id="password"
+                                required
+                                minlength="6"
+                                class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                                placeholder="Create password"
+                            >
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">Confirm Password</label>
+                        <div class="relative">
+                            <i class="bi bi-lock-fill absolute left-4 top-4 text-gray-400"></i>
+                            <input 
+                                type="password" 
+                                name="confirm_password" 
+                                id="confirmPassword"
+                                required
+                                class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                                placeholder="Confirm password"
+                            >
+                        </div>
+                        <p id="passwordMatch" class="text-sm mt-1"></p>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="flex items-start">
+                        <input type="checkbox" name="agree_terms" id="agreeTerms" required class="w-5 h-5 mt-0.5 text-blue-500 border-gray-300 rounded">
+                        <span class="ml-3 text-gray-600 text-sm">
+                            I agree to the Terms of Service and Privacy Policy
+                        </span>
+                    </label>
+                </div>
+
+                <button 
+                    type="submit" 
+                    id="signupBtn"
+                    class="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-4 rounded-xl hover:shadow-lg transition-all"
+                >
+                    Create Account
+                </button>
+            </form>
+
+            <div class="mt-8 text-center">
+                <p class="text-gray-600">
+                    Already have an account? 
+                    <a href="/login" class="text-blue-500 hover:text-blue-600 font-semibold">Log In</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleRoleFields() {
+        const role = document.getElementById('role').value;
+        const patientFields = document.getElementById('patientFields');
+        const doctorFields = document.getElementById('doctorFields');
+        
+        if (role === 'patient') {
+            patientFields.style.display = 'block';
+            doctorFields.style.display = 'none';
+        } else if (role === 'doctor') {
+            patientFields.style.display = 'none';
+            doctorFields.style.display = 'block';
+        } else {
+            patientFields.style.display = 'none';
+            doctorFields.style.display = 'none';
+        }
+    }
+
+    document.getElementById('confirmPassword').addEventListener('input', function() {
+        const password = document.getElementById('password').value;
+        const confirmPassword = this.value;
+        const matchDiv = document.getElementById('passwordMatch');
+        
+        if (confirmPassword === '') {
+            matchDiv.textContent = '';
+            matchDiv.className = 'text-sm mt-1';
+        } else if (password === confirmPassword) {
+            matchDiv.textContent = '✓ Passwords match';
+            matchDiv.className = 'text-sm mt-1 text-green-600 font-semibold';
+        } else {
+            matchDiv.textContent = '✗ Passwords do not match';
+            matchDiv.className = 'text-sm mt-1 text-red-600 font-semibold';
+        }
+    });
+
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+            return false;
+        }
+
+        const submitBtn = document.getElementById('signupBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span>Creating Account...';
+    });
+</script>
+{% endblock %}
