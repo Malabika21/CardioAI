@@ -3,6 +3,7 @@ CardioAI
 An AI-powered cardiovascular health prediction web application built with Python and Flask that uses a hybrid CNN-GRU deep learning architecture to analyze ECG and clinical parameters, generating cardiac arrhythmia predictions in real-time.
 
 📌 Project Overview
+
 CardioAI analyzes patient cardiac parameters and multi-lead data to predict cardiac arrhythmia and cardiovascular risks using deep learning models.
 The web application provides an intuitive dashboard for medical professionals and individuals to input diagnostic metrics, view real-time risk predictions, download processed reports, and track diagnostic histories.
 
@@ -81,6 +82,7 @@ HTML5 / CSS3 / Jinja2
 📂 Project Structure
 
 Plaintext
+
 CardioAI/
 │
 ├── models/
@@ -93,6 +95,7 @@ CardioAI/
 ├── requirements.txt
 ├── runtime.txt
 └── README.md
+
 ⚙️ Installation
 
 Clone the repository:
