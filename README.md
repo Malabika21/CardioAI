@@ -1,4 +1,5 @@
 CardioAI
+
 An AI-powered cardiovascular health prediction web application built with Python and Flask that uses a hybrid CNN-GRU deep learning architecture to analyze ECG and clinical parameters, generating cardiac arrhythmia predictions in real-time.
 
 📌 Project Overview
@@ -97,18 +98,24 @@ CardioAI/
 Clone the repository:
 
 Bash
+
 git clone https://github.com/Malabika21/CardioAI.git
+
 Move into the project directory:
 
 Bash
 cd CardioAI
+
 Install the required dependencies:
 
 Bash
+
 pip install -r requirements.txt
+
 Run the Flask application:
 
 Bash
+
 python app.py
 
 🌐 Deployment
